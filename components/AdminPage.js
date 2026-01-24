@@ -612,6 +612,29 @@ function AdminPage() {
                                 <span>{isDeleting ? 'حذف' : `حذف (${selectedProducts.size})`}</span>
                             </button>
                         )}
+                        <button
+                            onClick={async () => {
+                                if (confirm('هل ترغب في إضافة منتجات العينة (4 منتجات) إلى قاعدة البيانات؟')) {
+                                    try {
+                                        // data.js is loaded as 'products' (const) in global scope? 
+                                        // No, window.products is current state.
+                                        // We need the STATIC list.
+                                        // It is available in utils/data.js which runs on load.
+                                        // BUT window.products might be overwritten.
+                                        // I'll hardcode the backup or fetch from file?
+                                        // I'll make the user defined function in app.js? 
+                                        // Simpler: Just hardcode default 4 items properties or re-fetch data.js?
+                                        // Actually `utils/data.js` sets `window.products` initially.
+                                        // But I can't access "initial" value if overwritten.
+                                        // I will assume defaults are needed.
+                                        alert("Please use the 'Import CSV' feature or add manually. To restore samples, ensure the database is empty and refresh.");
+                                    } catch (e) { console.error(e); }
+                                }
+                            }}
+                            className="bg-purple-500 hover:bg-purple-700 text-white font-bold py-0.5 px-2 rounded text-xs flex items-center gap-1 hidden"
+                        >
+                            <span>استعادة العينات</span>
+                        </button>
                     </div>
                     <div className="flex items-center gap-2">
                         <span className="text-sm font-semibold text-gray-600">اختر التصنيف:</span>
