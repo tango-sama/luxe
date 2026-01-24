@@ -4,6 +4,7 @@
     "indexes": "firestore.indexes.json"
   },
   "hosting": {
+    "site": "desert-shop-24af9",
     "public": ".",
     "trailingSlash": false,
     "ignore": [
@@ -13,11 +14,15 @@
     ],
     "rewrites": [
       {
-        "source": "/amelhadj",
+        "source": "/categories",
         "destination": "/index.html"
       },
       {
-        "source": "/category/**",
+        "source": "/contact",
+        "destination": "/index.html"
+      },
+      {
+        "source": "/checkout",
         "destination": "/index.html"
       },
       {

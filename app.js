@@ -107,6 +107,8 @@ function App() {
 
                 // Fetch Products
                 let dbProducts = await window.db.getCollection('products');
+
+
                 if (dbProducts.length === 0 && window.products && window.products.length > 0) {
                     for (const prod of window.products) {
                         await window.db.addDocument('products', prod);
