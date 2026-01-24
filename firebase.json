@@ -18,6 +18,10 @@
         "destination": "/index.html"
       },
       {
+        "source": "/products",
+        "destination": "/index.html"
+      },
+      {
         "source": "/contact",
         "destination": "/index.html"
       },

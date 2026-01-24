@@ -70,6 +70,7 @@ const CategoryPageWrapper = () => window.CategoryPage ? <CategoryPage /> : <div 
 const CategoriesPageWrapper = () => window.CategoriesPage ? <CategoriesPage /> : <div className="p-10 text-center">جاري تحميل صفحة التصنيفات...</div>;
 const ProductPageWrapper = () => window.ProductPage ? <ProductPage /> : <div className="p-10 text-center">جاري تحميل صفحة المنتج...</div>;
 const ContactPageWrapper = () => window.ContactPage ? <ContactPage /> : <div className="p-10 text-center">جاري تحميل صفحة اتصل بنا...</div>;
+const AllProductsPageWrapper = () => window.AllProductsPage ? <AllProductsPage /> : <div className="p-10 text-center">جاري تحميل المنتجات...</div>;
 const AdminPageWrapper = () => window.AdminPage ? <AdminPage /> : <div className="p-10 text-center">جاري تحميل لوحة التحكم...</div>;
 
 const ScrollToTop = () => {
@@ -231,6 +232,7 @@ function App() {
             <Layout cartCount={cartCount}>
                 <Routes>
                     <Route path="/" element={<HomePage />} />
+                    <Route path="/products" element={<AllProductsPageWrapper />} />
                     <Route path="/categories" element={<CategoriesPageWrapper />} />
                     <Route path="/contact" element={<ContactPageWrapper />} />
                     <Route path="/checkout" element={<CheckoutWrapper cart={cart} />} />
