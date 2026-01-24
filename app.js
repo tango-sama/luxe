@@ -56,9 +56,17 @@ const Layout = ({ children, cartCount }) => {
     );
 };
 
+const DebugSection = () => (
+    <div className="bg-red-200 border-red-500 border-2 p-4 m-4 rounded text-xs overflow-auto max-h-96 z-50 relative" dir="ltr">
+        <h3 className="font-bold mb-2">Debug: All Loaded Products ({window.products?.length || 0})</h3>
+        <pre>{JSON.stringify(window.products || [], null, 2)}</pre>
+    </div>
+);
+
 const HomePage = () => (
     <React.Fragment>
         <Hero />
+        <DebugSection />
         <Features />
         <CategorySlider />
         <ProductGrid />
