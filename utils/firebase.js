@@ -6,7 +6,8 @@ const firebaseConfig = {
     storageBucket: "desert-shop-24af9.firebasestorage.app",
     messagingSenderId: "791427566190",
     appId: "1:791427566190:web:9b6f2a8f90dbb8f8b6f47f",
-    measurementId: "G-LYPS3KBY0W"
+    measurementId: "G-LYPS3KBY0W",
+    databaseId: "desert-shop-24af9"
 };
 
 // Initialize Firebase
@@ -52,6 +53,9 @@ window.db = {
         if (typeof firebase === 'undefined') return [];
         try {
             const snapshot = await firebase.firestore().collection(collectionName).get();
+            console.log(`[Firestore] Collection: ${collectionName}`);
+            console.log(`[Firestore] Empty: ${snapshot.empty}`);
+            console.log(`[Firestore] Size: ${snapshot.size}`);
             return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         } catch (error) {
             console.error(`Error getting collection ${collectionName}:`, error);
