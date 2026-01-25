@@ -1,11 +1,56 @@
 function ProductPage() {
     const { useParams, Link } = ReactRouterDOM;
     const { id } = useParams();
-    const product = window.products.find(p => p.id === parseInt(id));
+
+    // State to hold the product (initially valid only if window.products has it)
+    const [product, setProduct] = React.useState(() => {
+        return window.products ? window.products.find(p => p.id === parseInt(id)) : null;
+    });
+    const [loading, setLoading] = React.useState(!product);
     const [activeTab, setActiveTab] = React.useState('description');
 
-    // Icons
-    const { IconTruck, IconShieldCheck, IconMessageCircle, IconShield, IconSparkles, IconInstagram, IconFacebook, IconTikTok, IconWhatsApp } = window.Icons;
+    // Fetch product if not found locally
+    React.useEffect(() => {
+        const fetchProduct = async () => {
+            if (product) return; // Already have it
+
+            setLoading(true);
+            try {
+                // Try to find in existing list again (in case it loaded late)
+                const foundLocally = window.products?.find(p => p.id === parseInt(id));
+                if (foundLocally) {
+                    setProduct(foundLocally);
+                    setLoading(false);
+                    return;
+                }
+
+                // Query Firestore
+                console.log(`[ProductPage] Fetching product ${id}...`);
+                const productsRef = window.db ? firebase.firestore().collection('products') : null;
+
+                if (productsRef) {
+                    // Try to find by numeric ID field
+                    const snapshot = await productsRef.where('id', '==', parseInt(id)).limit(1).get();
+
+                    if (!snapshot.empty) {
+                        const productData = snapshot.docs[0].data();
+                        console.log('[ProductPage] Found product:', productData.title);
+                        setProduct(productData);
+                    } else {
+                        console.log('[ProductPage] Product not found in DB');
+                    }
+                }
+            } catch (error) {
+                console.error('[ProductPage] Error fetching product:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchProduct();
+    }, [id]);
+
+    const { IconTruck, IconShieldCheck, IconMessageCircle, IconShield, IconSparkles, IconInstagram, IconFacebook, IconTikTok, IconWhatsApp } = window.Icons || {};
 
     // Helper for Star Rating
     const StarRating = () => (
@@ -23,6 +68,14 @@ function ProductPage() {
             <polyline points="20 6 9 17 4 12"></polyline>
         </svg>
     );
+
+    if (loading) {
+        return (
+            <div className="container mx-auto px-4 py-20 flex justify-center">
+                <div className="w-12 h-12 border-4 border-[var(--primary)] border-t-transparent rounded-full animate-spin"></div>
+            </div>
+        );
+    }
 
     if (!product) {
         return (
