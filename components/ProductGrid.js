@@ -42,11 +42,7 @@ function ProductGrid() {
                             ))}
                         </div>
 
-                        <div className="mt-12 text-center">
-                            <ReactRouterDOM.Link to="/products" className="inline-block bg-white text-[var(--primary)] border-2 border-[var(--primary)] px-8 py-3 rounded-full font-bold hover:bg-[var(--primary)] hover:text-white transition-colors duration-300 shadow-md">
-                                تصفح جميع المنتجات
-                            </ReactRouterDOM.Link>
-                        </div>
+
                     </>
                 )}
             </div>

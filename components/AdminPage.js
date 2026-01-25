@@ -1,4 +1,4 @@
-const SiteSettingsView = () => {
+const SiteSettingsView = ({ onBack }) => {
     const [settings, setSettings] = React.useState(window.siteSettings || {});
     const [isSaving, setIsSaving] = React.useState(false);
 
@@ -26,7 +26,7 @@ const SiteSettingsView = () => {
         <div className="animate-fade-in">
             <div className="flex items-center justify-between mb-8">
                 <h2 className="text-2xl font-bold text-[var(--text-dark)]">إعدادات الموقع</h2>
-                <button onClick={() => setCurrentView('dashboard')} className="text-[var(--primary)] font-bold hover:underline flex items-center gap-2">
+                <button onClick={onBack} className="text-[var(--primary)] font-bold hover:underline flex items-center gap-2">
                     <div className="icon-arrow-right"></div>
                     <span>العودة</span>
                 </button>
@@ -327,13 +327,15 @@ function AdminPage() {
                 await window.db.updateDocument('categories', editingCategory.id, categoryForm);
                 setCategories(categories.map(c => c.id === editingCategory.id ? categoryForm : c));
                 setEditingCategory(null);
+                // Close inline edit if it matches
+                if (inlineEditId === editingCategory.id) setInlineEditId(null);
             } else {
                 if (categories.find(c => c.id === categoryForm.id)) return alert('هذا المعرف (ID) موجود مسبقاً');
 
                 await window.db.addDocument('categories', categoryForm);
                 setCategories([...categories, categoryForm]);
             }
-            setCategoryForm({ name: '', id: '', image: '' });
+            setCategoryForm({ name: '', id: '', image: '', sortOrder: 0 }); // Reset form including sortOrder
         } catch (error) {
             alert("Error saving category");
             console.error(error);
@@ -343,6 +345,34 @@ function AdminPage() {
     const handleCancelEdit = () => {
         setEditingCategory(null);
         setCategoryForm({ name: '', id: '', image: '' });
+    };
+
+    const handleMoveCategory = async (catId, direction) => {
+        // Sort current categories to find actual indices
+        const currentSorted = [...categories].sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+        const index = currentSorted.findIndex(c => c.id === catId);
+
+        const toIndex = index + direction; // -1 (up) or +1 (down)
+        if (toIndex < 0 || toIndex >= currentSorted.length) return;
+
+        // Swap in array
+        const temp = currentSorted[index];
+        currentSorted[index] = currentSorted[toIndex];
+        currentSorted[toIndex] = temp;
+
+        // Reassign sort orders
+        const updates = currentSorted.map((cat, idx) => ({ ...cat, sortOrder: idx }));
+
+        // Optimistic Update
+        setCategories(updates);
+
+        // Persist to DB
+        try {
+            await Promise.all(updates.map(c => window.db.updateDocument('categories', c.id, { sortOrder: c.sortOrder })));
+        } catch (error) {
+            console.error(error);
+            alert("Failed to save order");
+        }
     };
 
 
@@ -370,6 +400,8 @@ function AdminPage() {
 
                 alert('تم تحديث المنتج بنجاح');
                 setEditingProductId(null);
+                // Close inline edit if it matches the one being edited at top
+                if (productInlineEditId === editingProductId) setProductInlineEditId(null);
             } else {
                 // Add New Product
                 const newProduct = {
@@ -846,212 +878,220 @@ function AdminPage() {
     };
 
     // Categories Management View
-    const CategoriesView = () => (
-        <div className="animate-fade-in">
-            <div className="flex items-center justify-between mb-8">
-                <h2 className="text-2xl font-bold text-[var(--text-dark)]">إدارة التصنيفات</h2>
-                <button onClick={() => setCurrentView('dashboard')} className="text-[var(--primary)] font-bold hover:underline flex items-center gap-2">
-                    <div className="icon-arrow-right"></div>
-                    <span>العودة</span>
-                </button>
-            </div>
+    const CategoriesView = () => {
+        // We still sort it for display
+        const sortedCategories = [...categories].sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
 
-            {/* Add/Edit Category Form */}
-            <div className="bg-white rounded-xl shadow p-6 mb-8 border border-[var(--secondary)]">
-                <h3 className="text-lg font-bold mb-4 text-[var(--text-dark)]">
-                    {editingCategory ? 'تعديل التصنيف' : 'إضافة تصنيف جديد'}
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <input
-                        type="text"
-                        placeholder="اسم التصنيف (مثال: العناية بالشعر)"
-                        value={categoryForm.name}
-                        onChange={e => setCategoryForm({ ...categoryForm, name: e.target.value })}
-                        className="border p-3 rounded-lg outline-none focus:border-[var(--primary)]"
-                    />
-                    <input
-                        type="text"
-                        placeholder="المعرف (ID - انجليزي)"
-                        value={categoryForm.id}
-                        onChange={e => setCategoryForm({ ...categoryForm, id: e.target.value })}
-                        disabled={!!editingCategory}
-                        className={`border p-3 rounded-lg outline-none focus:border-[var(--primary)] ${editingCategory ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-                    />
-
-                    {/* Image Input Area */}
-                    <div className="relative">
-                        <input
-                            type="text"
-                            placeholder="رابط الصورة"
-                            value={categoryForm.image}
-                            onChange={e => setCategoryForm({ ...categoryForm, image: e.target.value })}
-                            className="border p-3 rounded-lg outline-none focus:border-[var(--primary)] w-full mb-2"
-                        />
-                        <div className="flex items-center gap-2">
-                            <input
-                                type="file"
-                                accept="image/*"
-                                onChange={async (e) => {
-                                    const file = e.target.files[0];
-                                    if (file) {
-                                        try {
-                                            // Show loading state if preferred, but for now we block alert
-                                            const url = await window.uploadImageToFirebase(file, 'categories');
-                                            setCategoryForm({ ...categoryForm, image: url });
-                                        } catch (error) {
-                                            alert("فشل رفع الصورة. تأكد من إعدادات Firebase");
-                                            console.error(error);
-                                        }
-                                    }
-                                }}
-                                className="hidden"
-                                id="category-image-upload"
-                            />
-                            <label
-                                htmlFor="category-image-upload"
-                                className="bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2 rounded cursor-pointer transition-colors text-sm font-bold flex items-center gap-2"
-                            >
-                                <div className="icon-upload-cloud"></div>
-                                رفع صورة
-                            </label>
-                            {categoryForm.image && <span className="text-green-600 text-xs font-bold">تم اختيار الصورة</span>}
-                        </div>
-                    </div>
-
-                    <div className="col-span-1 md:col-span-3 flex gap-2">
-                        <button
-                            onClick={handleSaveCategory}
-                            className={`${editingCategory ? 'bg-blue-600 hover:bg-blue-700' : 'bg-green-600 hover:bg-green-700'} text-white py-3 rounded-lg font-bold flex-1 transition-colors`}
-                        >
-                            {editingCategory ? 'حفظ التعديلات' : 'إضافة التصنيف'}
-                        </button>
-                        {editingCategory && (
-                            <button
-                                onClick={handleCancelEdit}
-                                className="bg-gray-500 hover:bg-gray-600 text-white py-3 rounded-lg font-bold px-8 transition-colors"
-                            >
-                                إلغاء
-                            </button>
-                        )}
-                    </div>
+        return (
+            <div className="animate-fade-in">
+                <div className="flex items-center justify-between mb-8">
+                    <h2 className="text-2xl font-bold text-[var(--text-dark)]">إدارة التصنيفات</h2>
+                    <button onClick={() => setCurrentView('dashboard')} className="text-[var(--primary)] font-bold hover:underline flex items-center gap-2">
+                        <div className="icon-arrow-right"></div>
+                        <span>العودة</span>
+                    </button>
                 </div>
-            </div>
 
-            {/* Categories Table */}
-            <div className="bg-white rounded-xl shadow overflow-hidden border border-[var(--secondary)]">
-                <table className="w-full text-right">
-                    <thead className="bg-[#fadadd]">
-                        <tr>
-                            <th className="p-4 text-[var(--text-dark)]">الصورة</th>
-                            <th className="p-4 text-[var(--text-dark)]">اسم التصنيف</th>
-                            <th className="p-4 text-[var(--text-dark)]">المعرف (ID)</th>
-                            <th className="p-4 text-[var(--text-dark)]">إجراءات</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                        {categories.map(cat => (
-                            <tr key={cat.id} className={`hover:bg-gray-50 transition-colors ${editingCategory?.id === cat.id ? 'bg-blue-50' : ''}`}>
-                                <td className="p-4">
-                                    <div
-                                        className="w-12 h-12 rounded object-cover border cursor-pointer hover:opacity-80 relative overflow-hidden group"
-                                        onClick={() => {
-                                            // Handle image upload even in inline mode? Or just keep it as is
-                                            handleEditCategory(cat);
-                                            // We could reuse the file input or make a new one, but for simplicity let's stick to the top form for image changes OR trigger it here if we want full inline.
-                                            // The user asked for "edit content in table", let's assume text for now, but keeping image update is fine via the existing mechanism which updates the form state.
-                                            // However, now we have inlineEditId.
-                                            if (inlineEditId === cat.id) {
-                                                // If we are inline editing this row, maybe clicking image triggers upload for *this* row? 
-                                                // Let's implement a specific handler for this if needed, or just let users use the top form for images as it's complex to fit in table.
-                                                // But to fully satisfy "edit content in table", maybe we should allow it.
-                                                // For now, let's focus on text inputs as requested.
-                                                document.getElementById('category-image-upload').click();
-                                            } else {
-                                                handleStartInlineEdit(cat); // Switch to inline edit on image click too? Optional.
+                {/* Add/Edit Category Form */}
+                <div className="bg-white rounded-xl shadow p-6 mb-8 border border-[var(--secondary)]">
+                    <h3 className="text-lg font-bold mb-4 text-[var(--text-dark)]">
+                        {editingCategory ? 'تعديل التصنيف' : 'إضافة تصنيف جديد'}
+                    </h3>
+                    <div className="flex flex-col md:flex-row gap-4">
+                        <div className="flex-grow flex gap-4">
+                            <input
+                                type="text"
+                                placeholder="اسم التصنيف"
+                                value={categoryForm.name}
+                                onChange={e => setCategoryForm({ ...categoryForm, name: e.target.value })}
+                                className="border p-3 rounded-lg flex-[2] outline-none focus:border-[var(--primary)]"
+                            />
+                            <input
+                                type="text"
+                                placeholder="ID"
+                                value={categoryForm.id}
+                                onChange={e => setCategoryForm({ ...categoryForm, id: e.target.value })}
+                                disabled={!!editingCategory}
+                                className={`border p-3 rounded-lg flex-1 outline-none focus:border-[var(--primary)] text-center dir-ltr ${editingCategory ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                            />
+                            {/* Hidden sort order input in form, strictly auto-managed now by table arrows, or keep it optional? 
+                                User asked for arrows in table. Let's keep form simple and remove sort input to avoid confusion. */}
+                        </div>
+
+                        {/* Image Input Area */}
+                        <div className="relative flex-[1.5]">
+                            <div className="flex gap-2">
+                                <input
+                                    type="text"
+                                    placeholder="رابط الصورة"
+                                    value={categoryForm.image}
+                                    onChange={e => setCategoryForm({ ...categoryForm, image: e.target.value })}
+                                    className="border p-3 rounded-lg w-full outline-none focus:border-[var(--primary)] text-sm"
+                                />
+                                <div className="flex items-center gap-2">
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={async (e) => {
+                                            const file = e.target.files[0];
+                                            if (file) {
+                                                try {
+                                                    const url = await window.uploadImageToFirebase(file, 'categories');
+                                                    setCategoryForm(prev => ({ ...prev, image: url }));
+                                                } catch (error) {
+                                                    alert("فشل رفع الصورة");
+                                                }
                                             }
                                         }}
-                                        title="اضغط لتغيير الصورة"
+                                        className="hidden"
+                                        id="category-image-upload-main"
+                                    />
+                                    <label
+                                        htmlFor="category-image-upload-main"
+                                        className="bg-gray-100 hover:bg-gray-200 text-gray-800 px-3 py-2 rounded cursor-pointer transition-colors text-sm font-bold flex items-center justify-center whitespace-nowrap"
                                     >
-                                        <img src={inlineEditId === cat.id ? inlineEditForm.image : cat.image} alt={cat.name} className="w-full h-full object-cover" />
-                                        <div className="absolute inset-0 bg-black/30 hidden group-hover:flex items-center justify-center text-white text-xs">
-                                            تغيير
-                                        </div>
-                                    </div>
-                                </td>
+                                        <div className="icon-upload-cloud mr-1"></div>
+                                        رفع
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
 
-                                <td className="p-4 font-bold">
-                                    {inlineEditId === cat.id ? (
-                                        <input
-                                            type="text"
-                                            value={inlineEditForm.name}
-                                            onChange={(e) => setInlineEditForm({ ...inlineEditForm, name: e.target.value })}
-                                            className="border p-2 rounded w-full outline-none focus:border-[var(--primary)] text-[var(--text-dark)]"
-                                        />
-                                    ) : (
-                                        cat.name
-                                    )}
-                                </td>
+                        <div className="flex gap-2 min-w-[150px]">
+                            <button
+                                onClick={handleSaveCategory}
+                                className={`${editingCategory ? 'bg-blue-600 hover:bg-blue-700' : 'bg-green-600 hover:bg-green-700'} text-white py-3 px-4 rounded-lg font-bold flex-grow transition-colors`}
+                            >
+                                {editingCategory ? 'حفظ' : 'إضافة'}
+                            </button>
+                            {editingCategory && (
+                                <button
+                                    onClick={handleCancelEdit}
+                                    className="bg-gray-500 hover:bg-gray-600 text-white py-3 px-4 rounded-lg font-bold transition-colors"
+                                >
+                                    إلغاء
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                </div>
 
-                                <td className="p-4 text-gray-500 font-mono text-sm">
-                                    {inlineEditId === cat.id ? (
-                                        <input
-                                            type="text"
-                                            value={inlineEditForm.id}
-                                            onChange={(e) => setInlineEditForm({ ...inlineEditForm, id: e.target.value })}
-                                            className="border p-2 rounded w-full outline-none focus:border-[var(--primary)] text-sm"
-                                        />
-                                    ) : (
-                                        cat.id
-                                    )}
-                                </td>
-
-                                <td className="p-4 flex gap-3">
-                                    {inlineEditId === cat.id ? (
-                                        <>
-                                            <button
-                                                onClick={handleSaveInlineEdit}
-                                                className="text-green-600 hover:text-green-800 font-bold text-sm px-3 py-1 border border-green-600 rounded hover:bg-green-50"
-                                                title="حفظ"
-                                            >
-                                                حفظ
-                                            </button>
-                                            <button
-                                                onClick={handleCancelInlineEdit}
-                                                className="text-gray-500 hover:text-gray-700 font-bold text-sm px-3 py-1 border border-gray-300 rounded hover:bg-gray-50"
-                                                title="إلغاء"
-                                            >
-                                                إلغاء
-                                            </button>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <button
-                                                onClick={() => handleStartInlineEdit(cat)}
-                                                className="text-blue-500 hover:text-blue-700 font-bold"
-                                                title="تعديل سريع"
-                                            >
-                                                <div className="flex items-center gap-1">
-                                                    <div className="icon-edit-2"></div>
-                                                    <span className="text-sm">تعديل</span>
-                                                </div>
-                                            </button>
-                                            <button
-                                                onClick={() => handleDeleteCategory(cat.id)}
-                                                className="text-red-500 hover:text-red-700"
-                                                title="حذف"
-                                            >
-                                                <div className="icon-trash"></div>
-                                            </button>
-                                        </>
-                                    )}
-                                </td>
+                {/* Categories Table */}
+                <div className="bg-white rounded-xl shadow overflow-hidden border border-[var(--secondary)]">
+                    <table className="w-full text-right">
+                        <thead className="bg-[#fadadd]">
+                            <tr>
+                                <th className="p-4 text-[var(--text-dark)] w-24 text-center">الترتيب</th>
+                                <th className="p-4 text-[var(--text-dark)] w-24">الصورة</th>
+                                <th className="p-4 text-[var(--text-dark)]">اسم التصنيف</th>
+                                <th className="p-4 text-[var(--text-dark)]">المعرف (ID)</th>
+                                <th className="p-4 text-[var(--text-dark)] text-center w-32">إجراءات</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                            {sortedCategories.map((cat, index) => (
+                                <tr key={cat.id} className={`hover:bg-gray-50 transition-colors ${editingCategory?.id === cat.id ? 'bg-blue-50' : ''}`}>
+                                    <td className="p-4 text-center">
+                                        <div className="flex flex-col items-center justify-center gap-1">
+                                            {/* UP BUTTON */}
+                                            <button
+                                                onClick={() => handleMoveCategory(cat.id, -1)}
+                                                className={`p-1 rounded hover:bg-gray-200 text-gray-600 ${index === 0 ? 'opacity-30 cursor-not-allowed' : ''}`}
+                                                disabled={index === 0}
+                                            >
+                                                <div className="icon-chevron-up"></div>
+                                            </button>
+
+                                            {/* DOWN BUTTON */}
+                                            <button
+                                                onClick={() => handleMoveCategory(cat.id, 1)}
+                                                className={`p-1 rounded hover:bg-gray-200 text-gray-600 ${index === sortedCategories.length - 1 ? 'opacity-30 cursor-not-allowed' : ''}`}
+                                                disabled={index === sortedCategories.length - 1}
+                                            >
+                                                <div className="icon-chevron-down"></div>
+                                            </button>
+                                        </div>
+                                    </td>
+                                    <td className="p-4">
+                                        <div
+                                            className="w-12 h-12 rounded object-cover border cursor-pointer hover:opacity-80 relative overflow-hidden group"
+                                            onClick={() => handleEditCategory(cat)}
+                                            title="تعديل"
+                                        >
+                                            <img src={inlineEditId === cat.id ? inlineEditForm.image : cat.image} alt={cat.name} className="w-full h-full object-cover" />
+                                        </div>
+                                    </td>
+
+                                    <td className="p-4 font-bold">
+                                        {inlineEditId === cat.id ? (
+                                            <input
+                                                type="text"
+                                                value={inlineEditForm.name}
+                                                onChange={(e) => setInlineEditForm({ ...inlineEditForm, name: e.target.value })}
+                                                className="border p-2 rounded w-full outline-none focus:border-[var(--primary)] text-[var(--text-dark)]"
+                                            />
+                                        ) : (
+                                            cat.name
+                                        )}
+                                    </td>
+
+                                    <td className="p-4 text-gray-500 font-mono text-sm dir-ltr text-right">
+                                        {inlineEditId === cat.id ? (
+                                            <input
+                                                type="text"
+                                                value={inlineEditForm.id}
+                                                onChange={(e) => setInlineEditForm({ ...inlineEditForm, id: e.target.value })}
+                                                className="border p-2 rounded w-full outline-none focus:border-[var(--primary)] text-sm"
+                                            />
+                                        ) : (
+                                            cat.id
+                                        )}
+                                    </td>
+
+                                    <td className="p-4 flex justify-center gap-2">
+                                        {inlineEditId === cat.id ? (
+                                            <>
+                                                <button
+                                                    onClick={handleSaveInlineEdit}
+                                                    className="text-green-600 hover:text-green-800 font-bold text-xs border border-green-600 rounded px-2 py-1 hover:bg-green-50"
+                                                >
+                                                    حفظ
+                                                </button>
+                                                <button
+                                                    onClick={handleCancelInlineEdit}
+                                                    className="text-gray-500 hover:text-gray-700 font-bold text-xs border border-gray-300 rounded px-2 py-1 hover:bg-gray-50"
+                                                >
+                                                    إلغاء
+                                                </button>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <button
+                                                    onClick={() => handleStartInlineEdit(cat)}
+                                                    className="text-blue-500 hover:text-blue-700 px-2 flex items-center gap-1 font-bold"
+                                                    title="تعديل سريع"
+                                                >
+                                                    <div className="icon-edit-2 text-lg"></div>
+                                                    <span>تعديل</span>
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDeleteCategory(cat.id)}
+                                                    className="text-red-500 hover:text-red-700 px-2"
+                                                    title="حذف"
+                                                >
+                                                    <div className="icon-trash text-lg"></div>
+                                                </button>
+                                            </>
+                                        )}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </div>
-    );
+        );
+    };
 
     // Placeholders for other views
     const PlaceholderView = ({ title, icon, desc }) => (
@@ -1110,7 +1150,7 @@ function AdminPage() {
 
             {currentView === 'categories' && CategoriesView()}
 
-            {currentView === 'site' && <SiteSettingsView />}
+            {currentView === 'site' && <SiteSettingsView onBack={() => setCurrentView('dashboard')} />}
         </div>
     );
 }

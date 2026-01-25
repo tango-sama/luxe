@@ -36,14 +36,6 @@ const Layout = ({ children, cartCount }) => {
     const navigate = useNavigate();
     const isAdmin = location.pathname.startsWith('/amelhadj');
 
-    // Backward Compatibility: Redirect Hash URLs to Path URLs
-    React.useEffect(() => {
-        if (window.location.hash && window.location.hash.startsWith('#/')) {
-            const newPath = window.location.hash.substring(1);
-            navigate(newPath, { replace: true });
-        }
-    }, [navigate]);
-
     return (
         <div className="min-h-screen flex flex-col">
             <Header cartCount={cartCount} />
@@ -56,6 +48,8 @@ const Layout = ({ children, cartCount }) => {
     );
 };
 
+// ... (Rest of component definitions)
+// RESTORING DELETED COMPONENTS
 const HomePage = () => (
     <React.Fragment>
         <Hero />
@@ -82,7 +76,7 @@ const ScrollToTop = () => {
 };
 
 function App() {
-    const { BrowserRouter, Routes, Route } = ReactRouterDOM;
+    const { HashRouter, Routes, Route } = ReactRouterDOM; // Switched to HashRouter
 
     const [loading, setLoading] = React.useState(true);
 
@@ -114,7 +108,8 @@ function App() {
                     }
                     window.categories = window.categories;
                 } else if (dbCategories.length > 0) {
-                    window.categories = dbCategories;
+                    // Sort categories by sortOrder
+                    window.categories = dbCategories.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
                 }
 
                 // Products are now fetched on-demand by individual pages (not on app init)
@@ -224,7 +219,7 @@ function App() {
     }, 0);
 
     return (
-        <BrowserRouter>
+        <HashRouter>
             <ScrollToTop />
 
             {/* Cart Drawer - Global Overlay */}
@@ -242,7 +237,7 @@ function App() {
                     <Route path="/product/:id" element={<ProductPageWrapper />} />
                 </Routes>
             </Layout>
-        </BrowserRouter>
+        </HashRouter>
     );
 }
 
