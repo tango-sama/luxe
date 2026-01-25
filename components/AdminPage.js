@@ -105,6 +105,85 @@ const SiteSettingsView = ({ onBack }) => {
     );
 };
 
+// Messages View Component
+const MessagesView = ({ onBack }) => {
+    const [messages, setMessages] = React.useState([]);
+    const [loading, setLoading] = React.useState(true);
+
+    React.useEffect(() => {
+        const fetchMessages = async () => {
+            try {
+                const msgs = await window.db.getCollection('messages');
+                // Sort by timestamp desc
+                setMessages(msgs.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)));
+            } catch (e) {
+                console.error(e);
+                alert("Failed to load messages");
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchMessages();
+    }, []);
+
+    const handleDelete = async (id) => {
+        if (confirm('هل أنت متأكد من حذف هذه الرسالة؟')) {
+            try {
+                await window.db.deleteDocument('messages', id);
+                setMessages(messages.filter(m => m.id !== id));
+            } catch (e) {
+                console.error(e);
+            }
+        }
+    };
+
+    return (
+        <div className="animate-fade-in">
+            <div className="flex items-center justify-between mb-8">
+                <h2 className="text-2xl font-bold text-[var(--text-dark)]">رسائل العملاء ({messages.length})</h2>
+                <button onClick={onBack} className="text-[var(--primary)] font-bold hover:underline flex items-center gap-2">
+                    <div className="icon-arrow-right"></div>
+                    <span>العودة</span>
+                </button>
+            </div>
+
+            {loading ? (
+                <div className="text-center py-10">جاري التحميل...</div>
+            ) : messages.length === 0 ? (
+                <div className="text-center py-20 text-gray-500 text-xl font-bold border-2 border-dashed border-gray-300 rounded-xl">
+                    لا توجد رسائل جديدة
+                </div>
+            ) : (
+                <div className="grid gap-4">
+                    {messages.map(msg => (
+                        <div key={msg.id} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow relative">
+                            <div className="flex justify-between items-start mb-4">
+                                <div>
+                                    <h3 className="font-bold text-lg text-[var(--text-dark)]">{msg.name}</h3>
+                                    <div className="text-sm text-gray-500 mt-1 flex gap-4">
+                                        <span className="flex items-center gap-1"><div className="icon-phone text-xs"></div> {msg.phone}</span>
+                                        <span className="flex items-center gap-1"><div className="icon-clock text-xs"></div> {new Date(msg.timestamp).toLocaleString('ar-DZ')}</span>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => handleDelete(msg.id)}
+                                    className="text-red-400 hover:text-red-600 p-2"
+                                    title="حذف"
+                                >
+                                    <div className="icon-trash"></div>
+                                </button>
+                            </div>
+                            <div className="bg-gray-50 p-4 rounded-lg text-gray-700 whitespace-pre-wrap leading-relaxed">
+                                {msg.message}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+};
+
 function AdminPage() {
     const [currentView, setCurrentView] = React.useState('dashboard');
     const { Link } = ReactRouterDOM;
@@ -1139,9 +1218,10 @@ function AdminPage() {
                     </div>
 
                     <div className="flex flex-col w-full max-w-md gap-4">
-                        <DashboardBtn title="تعديل التصنيفات" onClick={() => setCurrentView('categories')} />
                         <DashboardBtn title="تعديل المنتجات" onClick={() => setCurrentView('products')} />
-                        <DashboardBtn title="تعديل الموقع" onClick={() => setCurrentView('site')} />
+                        <DashboardBtn title="تعديل التصنيفات" onClick={() => setCurrentView('categories')} />
+                        <DashboardBtn title="إعدادات الموقع" onClick={() => setCurrentView('site')} />
+                        <DashboardBtn title="رسائل العملاء" onClick={() => setCurrentView('messages')} className="bg-teal-600 hover:bg-teal-700" />
                     </div>
                 </div>
             )}
@@ -1149,6 +1229,8 @@ function AdminPage() {
             {currentView === 'products' && ProductsView()}
 
             {currentView === 'categories' && CategoriesView()}
+
+            {currentView === 'messages' && <MessagesView onBack={() => setCurrentView('dashboard')} />}
 
             {currentView === 'site' && <SiteSettingsView onBack={() => setCurrentView('dashboard')} />}
         </div>
