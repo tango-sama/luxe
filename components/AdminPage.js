@@ -685,7 +685,7 @@ function AdminPage() {
                                         <td className="p-4 font-medium">
                                             <div className="flex items-center gap-3">
                                                 <img
-                                                    src={p.image || "https://via.placeholder.com/40"}
+                                                    src={p.image || "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDQwIDQwIj48cmVjdCB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIGZpbGw9IiNlZWUiLz48L3N2Zz4="}
                                                     alt={p.title}
                                                     className="w-10 h-10 rounded-lg object-cover shadow-sm border border-gray-200 bg-gray-50 flex-shrink-0"
                                                 />

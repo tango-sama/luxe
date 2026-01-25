@@ -29,7 +29,10 @@ const CategorySlider = () => {
                                 <img
                                     src={cat.image || './assets/placeholder.png'}
                                     alt={cat.name}
-                                    onError={(e) => e.target.src = 'https://via.placeholder.com/100?text=' + cat.name}
+                                    onError={(e) => {
+                                        e.target.onerror = null;
+                                        e.target.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PHJlY3Qgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiNlZWUiLz48L3N2Zz4=';
+                                    }}
                                     className="w-full h-full object-cover rounded-full group-hover:scale-110 transition-transform duration-500"
                                 />
                             </div>
