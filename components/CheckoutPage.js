@@ -51,7 +51,7 @@ ${validItems.map(item => `- ${item.title} (عدد: ${item.quantity || 1})`).join
 يرجى تأكيد الطلب.
         `.trim();
 
-        const whatsappUrl = `https://wa.me/213664925052?text=${encodeURIComponent(message)}`;
+        const whatsappUrl = `https://wa.me/213662705830?text=${encodeURIComponent(message)}`;
         window.open(whatsappUrl, '_blank');
 
         // Clear Cart

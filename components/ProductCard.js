@@ -37,7 +37,7 @@ function ProductCard({ product }) {
             {/* WhatsApp - Bottom Right */}
             <div className="absolute bottom-4 right-4 z-30">
                 <a
-                    href={`https://wa.me/213664925052?text=${encodeURIComponent(`مرحباً، أريد طلب المنتج: ${product.title}`)}`}
+                    href={`https://wa.me/213662705830?text=${encodeURIComponent(`مرحباً، أريد طلب المنتج: ${product.title}`)}`}
                     target="_blank"
                     rel="noreferrer"
                     onClick={(e) => e.stopPropagation()}

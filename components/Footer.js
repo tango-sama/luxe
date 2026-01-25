@@ -19,7 +19,7 @@ function Footer({ isAdmin }) {
                 <div className="flex flex-col items-center gap-6 mb-8 w-full">
                     <h3 className="text-2xl font-bold text-[var(--primary)] drop-shadow-sm">هويتنا على مواقع التواصل الاجتماعي</h3>
                     <div className="flex gap-6 items-center justify-center">
-                        <a href="https://wa.me/213664925052" target="_blank" rel="noreferrer" className="transform hover:scale-110 transition-transform duration-300">
+                        <a href="https://wa.me/213662705830" target="_blank" rel="noreferrer" className="transform hover:scale-110 transition-transform duration-300">
                             <img src="./assets/whatsapp.png" alt="WhatsApp" className="w-12 h-12 md:w-14 md:h-14 object-contain drop-shadow-md" />
                         </a>
                         <a href="https://www.facebook.com/desertshop.dz" target="_blank" rel="noreferrer" className="transform hover:scale-110 transition-transform duration-300">

@@ -155,7 +155,7 @@ function ProductPage() {
                             </button>
 
                             <a
-                                href={`https://wa.me/213664925052?text=${encodeURIComponent(`مرحباً، أريد طلب المنتج: ${product.title}`)}`}
+                                href={`https://wa.me/213662705830?text=${encodeURIComponent(`مرحباً، أريد طلب المنتج: ${product.title}`)}`}
                                 target="_blank"
                                 rel="noreferrer"
                                 className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white font-bold py-4 px-8 rounded-xl shadow-lg transition-all flex items-center justify-center gap-3 text-lg"
@@ -256,7 +256,7 @@ function ProductPage() {
                     <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 text-center animate-fade-in-up">
                         <h2 className="text-2xl font-bold text-[var(--text-dark)] mb-6">هويتنا على مواقع التواصل الاجتماعي</h2>
                         <div className="flex justify-center gap-6">
-                            <a href="https://wa.me/213664925052" target="_blank" rel="noreferrer" className="transform hover:scale-110 transition-transform duration-300">
+                            <a href="https://wa.me/213662705830" target="_blank" rel="noreferrer" className="transform hover:scale-110 transition-transform duration-300">
                                 <img src="./assets/whatsapp.png" alt="WhatsApp" className="w-14 h-14 object-contain drop-shadow-md" />
                             </a>
                             <a href="https://www.facebook.com/desertshop.dz" target="_blank" rel="noreferrer" className="transform hover:scale-110 transition-transform duration-300">
