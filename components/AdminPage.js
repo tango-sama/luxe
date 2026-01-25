@@ -977,7 +977,7 @@ function AdminPage() {
                         {editingCategory ? 'تعديل التصنيف' : 'إضافة تصنيف جديد'}
                     </h3>
                     <div className="flex flex-col md:flex-row gap-4">
-                        <div className="flex-grow flex gap-4">
+                        <div className="flex-grow flex flex-col md:flex-row gap-4">
                             <input
                                 type="text"
                                 placeholder="اسم التصنيف"
@@ -993,8 +993,6 @@ function AdminPage() {
                                 disabled={!!editingCategory}
                                 className={`border p-3 rounded-lg flex-1 outline-none focus:border-[var(--primary)] text-center dir-ltr ${editingCategory ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                             />
-                            {/* Hidden sort order input in form, strictly auto-managed now by table arrows, or keep it optional? 
-                                User asked for arrows in table. Let's keep form simple and remove sort input to avoid confusion. */}
                         </div>
 
                         {/* Image Input Area */}
@@ -1036,7 +1034,7 @@ function AdminPage() {
                             </div>
                         </div>
 
-                        <div className="flex gap-2 min-w-[150px]">
+                        <div className="flex gap-2 min-w-[150px] w-full md:w-auto">
                             <button
                                 onClick={handleSaveCategory}
                                 className={`${editingCategory ? 'bg-blue-600 hover:bg-blue-700' : 'bg-green-600 hover:bg-green-700'} text-white py-3 px-4 rounded-lg font-bold flex-grow transition-colors`}
@@ -1056,7 +1054,7 @@ function AdminPage() {
                 </div>
 
                 {/* Categories Table */}
-                <div className="bg-white rounded-xl shadow overflow-hidden border border-[var(--secondary)]">
+                <div className="bg-white rounded-xl shadow overflow-x-auto border border-[var(--secondary)]">
                     <table className="w-full text-right">
                         <thead className="bg-[#fadadd]">
                             <tr>
