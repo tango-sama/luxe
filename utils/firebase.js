@@ -7,7 +7,7 @@ const firebaseConfig = {
     messagingSenderId: "791427566190",
     appId: "1:791427566190:web:9b6f2a8f90dbb8f8b6f47f",
     measurementId: "G-LYPS3KBY0W",
-    databaseId: "desert-shop-24af9"
+    databaseId: "webstore"
 };
 
 // Initialize Firebase
