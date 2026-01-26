@@ -497,8 +497,8 @@ function AdminPage() {
 
             setNewProductForm({ title: '', price: '', category: '', image: '', description: '' });
         } catch (error) {
-            alert("Error saving product");
             console.error(error);
+            alert("فشل حفظ المنتج: " + (error.message || error));
         }
     };
 
@@ -965,10 +965,52 @@ function AdminPage() {
             <div className="animate-fade-in">
                 <div className="flex items-center justify-between mb-8">
                     <h2 className="text-2xl font-bold text-[var(--text-dark)]">إدارة التصنيفات</h2>
-                    <button onClick={() => setCurrentView('dashboard')} className="text-[var(--primary)] font-bold hover:underline flex items-center gap-2">
-                        <div className="icon-arrow-right"></div>
-                        <span>العودة</span>
-                    </button>
+                    <div className="flex gap-3">
+                        <button
+                            onClick={async () => {
+                                if (confirm('تحذير: هذا سيقوم بحذف جميع التصنيفات الحالية من قاعدة البيانات واستعادة التصنيفات الافتراضية للموقع. هل أنت متأكد؟')) {
+                                    try {
+                                        // 1. Delete current
+                                        const current = await window.db.getCollection('categories');
+                                        for (const cat of current) {
+                                            await window.db.deleteDocument('categories', cat.id);
+                                        }
+
+                                        // 2. Add Defaults
+                                        const defaults = [
+                                            { id: "pheromones", name: "عطور فرمونية", image: "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&q=80&w=400", sortOrder: 1 },
+                                            { id: "vagina_care", name: "العناية بالمهبل", image: "https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?auto=format&fit=crop&q=80&w=400", sortOrder: 2 },
+                                            { id: "butt_enlargement", name: "منتجات تكبير المؤخرة", image: "https://images.unsplash.com/photo-1518818419601-72c83366fad9?auto=format&fit=crop&q=80&w=400", sortOrder: 3 },
+                                            { id: "breast_enlargement", name: "منتجات تكبير الصدر", image: "https://images.unsplash.com/photo-1522337360705-8763d84a783a?auto=format&fit=crop&q=80&w=400", sortOrder: 4 },
+                                            { id: "skin_care", name: "العناية بالبشرة", image: "https://images.unsplash.com/photo-1596462502278-27bfdd403348?auto=format&fit=crop&q=80&w=400", sortOrder: 5 },
+                                            { id: "hair_care", name: "منتجات العناية بالشعر", image: "https://images.unsplash.com/photo-1519699047748-40ba5267930b?auto=format&fit=crop&q=80&w=400", sortOrder: 6 },
+                                            { id: "slimming", name: "منتجات تنحيف", image: "https://images.unsplash.com/photo-1511611359134-4deb56379a59?auto=format&fit=crop&q=80&w=400", sortOrder: 7 },
+                                            { id: "fattening", name: "منتجات تسمين", image: "https://images.unsplash.com/photo-1541658016709-82535e94bc69?auto=format&fit=crop&q=80&w=400", sortOrder: 8 }
+                                        ];
+
+                                        for (const cat of defaults) {
+                                            await window.db.addDocument('categories', cat);
+                                        }
+
+                                        setCategories(defaults);
+                                        window.categories = defaults;
+                                        alert('تم استعادة البيانات الافتراضية بنجاح.');
+                                    } catch (e) {
+                                        console.error(e);
+                                        alert('حدث خطأ أثناء المزامنة');
+                                    }
+                                }
+                            }}
+                            className="text-purple-600 hover:bg-purple-50 px-4 py-2 rounded-lg font-bold flex items-center gap-2 border border-purple-200"
+                        >
+                            <div className="icon-refresh-cw"></div>
+                            <span>مزامنة افتراضية</span>
+                        </button>
+                        <button onClick={() => setCurrentView('dashboard')} className="text-[var(--primary)] font-bold hover:underline flex items-center gap-2">
+                            <div className="icon-arrow-right"></div>
+                            <span>العودة</span>
+                        </button>
+                    </div>
                 </div>
 
                 {/* Add/Edit Category Form */}

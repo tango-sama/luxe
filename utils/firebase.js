@@ -1,12 +1,12 @@
 // Firebase Configuration
 const firebaseConfig = {
-    apiKey: "AIzaSyAP_qj-4hpHN6Vjn8ZbcnqRfzB5SvOmgmM",
-    authDomain: "desert-shop-24af9.firebaseapp.com",
-    projectId: "desert-shop-24af9",
-    storageBucket: "desert-shop-24af9.firebasestorage.app",
-    messagingSenderId: "791427566190",
-    appId: "1:791427566190:web:9b6f2a8f90dbb8f8b6f47f",
-    measurementId: "G-LYPS3KBY0W"
+    apiKey: "AIzaSyBl9GqLFMRVwxrXSJsIUlH7FYbV0HU9tnA",
+    authDomain: "luxe-f3665.firebaseapp.com",
+    projectId: "luxe-f3665",
+    storageBucket: "luxe-f3665.firebasestorage.app",
+    messagingSenderId: "720514981038",
+    appId: "1:720514981038:web:aea44c259f31723df1e13f",
+    measurementId: "G-QF18ST5VTQ"
 };
 
 // Initialize Firebase
